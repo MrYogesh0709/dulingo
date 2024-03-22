@@ -3,17 +3,31 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { courses } from '@/db/schema';
+import { courses, userProgress } from '@/db/schema';
 import { Card } from './Card';
+import { updateUserProgress } from '@/actions/user-progress';
+import { toast } from 'sonner';
 
 type Props = {
   courses: (typeof courses.$inferSelect)[];
-  activeCourseId?: number;
+  activeCourseId?: typeof userProgress.$inferSelect.activeCourseId;
 };
 
 export const List = ({ courses, activeCourseId }: Props) => {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const onClick = () => {};
+
+  const onClick = (id: number) => {
+    if (pending) return;
+
+    if (id === activeCourseId) {
+      return router.push('/learn');
+    }
+
+    startTransition(() => {
+      updateUserProgress(id).catch(() => toast.error('Something went wrong'));
+    });
+  };
 
   return (
     <div className="grid grid-cols-2 gap-4 pt-6 lg:grid-cols-[repeat(auto-fill,minmax(210px,1fr))]">
