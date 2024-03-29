@@ -3,7 +3,13 @@ import { eq } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs';
 
 import db from '@/db/drizzle';
-import { courses, lessons, units, userProgress } from './schema';
+import {
+  challengeProgress,
+  courses,
+  lessons,
+  units,
+  userProgress,
+} from './schema';
 
 export const getUserProgress = cache(async () => {
   const { userId } = await auth();
@@ -17,17 +23,27 @@ export const getUserProgress = cache(async () => {
 });
 
 export const getUnits = cache(async () => {
+  const { userId } = await auth();
   const userProgress = await getUserProgress();
-  if (!userProgress?.activeCourseId) {
+
+  if (!userId || !userProgress?.activeCourseId) {
     return [];
   }
+
   const data = await db.query.units.findMany({
+    orderBy: (units, { asc }) => [asc(units.order)],
     where: eq(units.courseId, userProgress.activeCourseId),
     with: {
       lessons: {
+        orderBy: (lessons, { asc }) => [asc(lessons.order)],
         with: {
           challenges: {
-            with: { challengeProgress: true },
+            orderBy: (challenges, { asc }) => [asc(challenges.order)],
+            with: {
+              challengeProgress: {
+                where: eq(challengeProgress.userId, userId),
+              },
+            },
           },
         },
       },
@@ -35,17 +51,25 @@ export const getUnits = cache(async () => {
   });
 
   const normalizedData = data.map((unit) => {
-    const lessonWithCompletedStatus = unit.lessons.map((lesson) => {
-      const allCompletedChallenges = lesson.challenges.every(
-        (challenge) =>
+    const lessonsWithCompletedStatus = unit.lessons.map((lesson) => {
+      if (lesson.challenges.length === 0) {
+        return { ...lesson, completed: false };
+      }
+
+      const allCompletedChallenges = lesson.challenges.every((challenge) => {
+        return (
           challenge.challengeProgress &&
           challenge.challengeProgress.length > 0 &&
           challenge.challengeProgress.every((progress) => progress.completed)
-      );
-      return { ...lessons, completed: allCompletedChallenges };
+        );
+      });
+
+      return { ...lesson, completed: allCompletedChallenges };
     });
-    return { ...unit, lessons: lessonWithCompletedStatus };
+
+    return { ...unit, lessons: lessonsWithCompletedStatus };
   });
+
   return normalizedData;
 });
 
