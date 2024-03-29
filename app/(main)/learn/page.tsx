@@ -5,15 +5,17 @@ import { Header } from './header';
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { FeedWrapper } from '@/components/FeedWrapper';
 import { UserProgress } from '@/components/UserProgress';
-import { getUserProgress } from '@/db/queries';
+import { getUnits, getUserProgress } from '@/db/queries';
 
 const LearnPage = async () => {
-  const [userProgress] = await Promise.all([getUserProgress()]);
+  const [userProgress, unitsData] = await Promise.all([
+    getUserProgress(),
+    getUnits(),
+  ]);
 
   if (!userProgress || !userProgress.activeCourse) {
     redirect('/courses');
   }
-
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6">
       <StickyWrapper>
