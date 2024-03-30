@@ -10,11 +10,7 @@ type Props = {
   hasActiveSubscription: boolean;
 };
 
-export const Header = ({
-  hearts,
-  percentage,
-  hasActiveSubscription,
-}: Props) => {
+const Header = ({ hearts, percentage, hasActiveSubscription }: Props) => {
   const { open } = useExitModal();
 
   return (
@@ -41,3 +37,4 @@ export const Header = ({
     </header>
   );
 };
+export default Header;
