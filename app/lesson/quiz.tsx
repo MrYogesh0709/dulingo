@@ -1,13 +1,18 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useAudio, useWindowSize } from 'react-use';
+import Image from 'next/image';
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import Confetti from 'react-confetti';
 import { challengeOptions, challenges } from '@/db/schema';
 
 import Header from './header';
-import QuestionBubble from './QuestionBubble';
-import Challenge from './challenge';
 import Footer from './footer';
+import Challenge from './challenge';
+import ResultCard from './resultCard';
+import QuestionBubble from './QuestionBubble';
 
 import { upsertChallengeProgress } from '@/actions/challenge-progress';
 import { reduceHearts } from '@/actions/user-progress';
@@ -30,11 +35,20 @@ const Quiz = ({
   initialLessonId,
   userSubscription,
 }: Props) => {
+  const { width, height } = useWindowSize();
+  const router = useRouter();
+  const [correctAudio, _c, correctControls] = useAudio({ src: '/correct.wav' });
+  const [incorrectAudio, _i, incorrectControls] = useAudio({
+    src: '/incorrect.wav',
+  });
+  const [finishAudio] = useAudio({ src: '/finish.mp3', autoPlay: true });
   const [pending, startTransition] = useTransition();
   const [hearts, setHearts] = useState(initialHearts);
   const [percentage, setPercentage] = useState(() => {
     return initialPercentage === 100 ? 0 : initialPercentage;
   });
+
+  const [lessonId] = useState(initialLessonId);
   const [challenges] = useState(initialLessonChallenges);
   const [activeIndex, setActiveIndex] = useState(() => {
     const uncompletedIndex = challenges.findIndex(
@@ -46,11 +60,6 @@ const Quiz = ({
   const [status, setStatus] = useState<'correct' | 'wrong' | 'none'>('none');
 
   const challenge = challenges[activeIndex];
-  const options = challenge.challengeOptions ?? [];
-  const title =
-    challenge.type === 'ASSIST'
-      ? 'Select the correct meaning'
-      : challenge.question;
 
   const onSelect = (id: number) => {
     if (status !== 'none') return;
@@ -89,6 +98,7 @@ const Quiz = ({
               console.error('Missing Hearts');
               return;
             }
+            correctControls.play();
             setStatus('correct');
             setPercentage((prev) => prev + 100 / challenges.length);
 
@@ -107,6 +117,7 @@ const Quiz = ({
               console.error('Missing Hearts');
               return;
             }
+            incorrectControls.play();
             setStatus('wrong');
             if (!res?.error) {
               setHearts((prev) => Math.max(prev - 1, 0));
@@ -117,8 +128,58 @@ const Quiz = ({
     }
   };
 
+  if (!challenge) {
+    return (
+      <>
+        {finishAudio}
+        <Confetti
+          width={width}
+          height={height}
+          recycle={false}
+          numberOfPieces={500}
+          tweenDuration={10000}
+        />
+        <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center gap-y-4 text-center lg:gap-y-8">
+          <Image
+            src="/finish.svg"
+            alt="Finish"
+            className="hidden lg:block"
+            height={100}
+            width={100}
+          />
+          <Image
+            src="/finish.svg"
+            alt="Finish"
+            className="block lg:hidden"
+            height={50}
+            width={50}
+          />
+          <h1 className="text-xl font-bold text-neutral-700 lg:text-3xl">
+            Great job! <br /> You&apos;ve completed the lesson.
+          </h1>
+          <div className="flex w-full items-center gap-x-4">
+            <ResultCard variant="points" value={challenges.length * 10} />
+            <ResultCard variant="hearts" value={hearts} />
+          </div>
+        </div>
+        <Footer
+          lessonId={lessonId}
+          status="completed"
+          onCheck={() => router.push('/learn')}
+        />
+      </>
+    );
+  }
+
+  const options = challenge.challengeOptions ?? [];
+  const title =
+    challenge.type === 'ASSIST'
+      ? 'Select the correct meaning'
+      : challenge.question;
   return (
     <>
+      {correctAudio}
+      {incorrectAudio}
       <Header
         hearts={hearts}
         percentage={percentage}
