@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { useAudio, useWindowSize } from 'react-use';
+import { useAudio, useWindowSize, useMount } from 'react-use';
 import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,9 @@ import Footer from './footer';
 import Challenge from './challenge';
 import ResultCard from './resultCard';
 import QuestionBubble from './QuestionBubble';
+
+import { useHeartsModal } from '@/store/use-hearts-modal';
+import { usePracticeModal } from '@/store/use-practice-modal';
 
 import { upsertChallengeProgress } from '@/actions/challenge-progress';
 import { reduceHearts } from '@/actions/user-progress';
@@ -35,6 +38,14 @@ const Quiz = ({
   initialLessonId,
   userSubscription,
 }: Props) => {
+  const { open: openHeartsModal } = useHeartsModal();
+  const { open: openPracticeModal } = usePracticeModal();
+
+  useMount(() => {
+    if (initialPercentage === 100) {
+      openPracticeModal();
+    }
+  });
   const { width, height } = useWindowSize();
   const router = useRouter();
   const [correctAudio, _c, correctControls] = useAudio({ src: '/correct.wav' });
@@ -95,7 +106,7 @@ const Quiz = ({
         upsertChallengeProgress(challenge.id)
           .then((res) => {
             if (res?.error === 'hearts') {
-              console.error('Missing Hearts');
+              openHeartsModal();
               return;
             }
             correctControls.play();
@@ -114,7 +125,7 @@ const Quiz = ({
         reduceHearts(challenge.id)
           .then((res) => {
             if (res?.error === 'hearts') {
-              console.error('Missing Hearts');
+              openHeartsModal();
               return;
             }
             incorrectControls.play();
