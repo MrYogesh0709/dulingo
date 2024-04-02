@@ -8,6 +8,7 @@ import { POINTS_TO_REFILL } from '@/constants';
 
 import { Button } from '@/components/ui/button';
 import { refillHearts } from '@/actions/user-progress';
+import { createStripeUrl } from '@/actions/user-subscription';
 
 type Props = {
   hearts: number;
@@ -27,7 +28,17 @@ const Items = ({ hasActiveSubscription, points, hearts }: Props) => {
     });
   };
 
-  const onUpgrade = () => {};
+  const onUpgrade = () => {
+    startTransition(() => {
+      createStripeUrl()
+        .then((res) => {
+          if (res.data) {
+            window.location.href = res.data;
+          }
+        })
+        .catch(() => toast.error('Something went wrong'));
+    });
+  };
 
   return (
     <ul className="w-full">

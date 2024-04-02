@@ -1,28 +1,34 @@
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 
-import { getUserProgress } from '@/db/queries';
+import { getUserProgress, getUserSubscription } from '@/db/queries';
+
+import Items from './Items';
 
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { UserProgress } from '@/components/UserProgress';
 import { FeedWrapper } from '@/components/FeedWrapper';
-import Image from 'next/image';
-import Items from './Items';
 
 const ShopPage = async () => {
-  const [userProgress] = await Promise.all([getUserProgress()]);
+  const [userProgress, userSubscription] = await Promise.all([
+    getUserProgress(),
+    getUserSubscription(),
+  ]);
 
   if (!userProgress || !userProgress.activeCourse) {
     redirect('/courses');
   }
 
+  const isPro = !!userSubscription?.isActive;
+
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6">
       <StickyWrapper>
         <UserProgress
-          activeCourse={userProgress.activeCourse} //todo change
+          activeCourse={userProgress.activeCourse}
           hearts={userProgress.hearts}
           points={userProgress.points}
-          hasActiveSubscription={false}
+          hasActiveSubscription={isPro}
         />
       </StickyWrapper>
       <FeedWrapper>
@@ -36,7 +42,7 @@ const ShopPage = async () => {
           spend your coins on cool stuff.
         </p>
         <Items
-          hasActiveSubscription={false} //todo change
+          hasActiveSubscription={isPro}
           hearts={userProgress.hearts}
           points={userProgress.points}
         />
