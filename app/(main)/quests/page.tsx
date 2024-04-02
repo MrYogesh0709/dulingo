@@ -3,13 +3,14 @@ import { redirect } from 'next/navigation';
 
 import { getUserProgress, getUserSubscription } from '@/db/queries';
 
-import Items from './Items';
-
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { UserProgress } from '@/components/UserProgress';
 import { FeedWrapper } from '@/components/FeedWrapper';
 
-const ShopPage = async () => {
+import { quests } from '@/constants';
+import { Progress } from '@/components/ui/progress';
+
+const LeaderBoardPage = async () => {
   const [userProgress, userSubscription] = await Promise.all([
     getUserProgress(),
     getUserSubscription(),
@@ -33,22 +34,42 @@ const ShopPage = async () => {
       </StickyWrapper>
       <FeedWrapper>
         <div className="flex w-full flex-col items-center">
-          <Image width={90} height={90} src="/shop.svg" alt="shop" />
+          <Image width={90} height={90} src="/quests.svg" alt="Quests" />
           <h1 className="my-6 text-center text-2xl font-bold text-neutral-800">
-            Shop
+            Quests
           </h1>
           <p className="mb-6 text-center text-lg text-muted-foreground">
-            spend your coins on cool stuff.
+            Complete quest by earing points .
           </p>
-          <Items
-            hasActiveSubscription={isPro}
-            hearts={userProgress.hearts}
-            points={userProgress.points}
-          />
+          <ul className="w-full">
+            {quests.map((quest) => {
+              const progress = (userProgress.points / quest.value) * 100;
+
+              return (
+                <div
+                  className="flex w-full items-center gap-x-4 border-t-2 p-4"
+                  key={quest.title}
+                >
+                  <Image
+                    src="/points.svg"
+                    alt="Points"
+                    width={60}
+                    height={60}
+                  />
+                  <div className="flex w-full flex-col gap-y-2">
+                    <p className="text-xl font-bold text-neutral-700">
+                      {quest.title}
+                    </p>
+                    <Progress value={progress} className="h-3" />
+                  </div>
+                </div>
+              );
+            })}
+          </ul>
         </div>
       </FeedWrapper>
     </div>
   );
 };
 
-export default ShopPage;
+export default LeaderBoardPage;
