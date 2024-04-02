@@ -6,9 +6,11 @@ import { getUserProgress, getUserSubscription } from '@/db/queries';
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { UserProgress } from '@/components/UserProgress';
 import { FeedWrapper } from '@/components/FeedWrapper';
+import { Promo } from '@/components/promo';
+
+import { Progress } from '@/components/ui/progress';
 
 import { quests } from '@/constants';
-import { Progress } from '@/components/ui/progress';
 
 const LeaderBoardPage = async () => {
   const [userProgress, userSubscription] = await Promise.all([
@@ -31,6 +33,7 @@ const LeaderBoardPage = async () => {
           points={userProgress.points}
           hasActiveSubscription={isPro}
         />
+        {!isPro && <Promo />}
       </StickyWrapper>
       <FeedWrapper>
         <div className="flex w-full flex-col items-center">

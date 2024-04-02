@@ -8,6 +8,8 @@ import Items from './Items';
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { UserProgress } from '@/components/UserProgress';
 import { FeedWrapper } from '@/components/FeedWrapper';
+import { Promo } from '@/components/promo';
+import { Quests } from '@/components/quests';
 
 const ShopPage = async () => {
   const [userProgress, userSubscription] = await Promise.all([
@@ -30,6 +32,8 @@ const ShopPage = async () => {
           points={userProgress.points}
           hasActiveSubscription={isPro}
         />
+        {!isPro && <Promo />}
+        <Quests points={userProgress.points} />
       </StickyWrapper>
       <FeedWrapper>
         <div className="flex w-full flex-col items-center">

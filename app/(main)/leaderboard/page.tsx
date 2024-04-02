@@ -9,9 +9,12 @@ import {
 
 import { StickyWrapper } from '@/components/StickyWrapper';
 import { UserProgress } from '@/components/UserProgress';
+import { Promo } from '@/components/promo';
+
 import { FeedWrapper } from '@/components/FeedWrapper';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
+import { Quests } from '@/components/quests';
 
 const LeaderBoardPage = async () => {
   const [userProgress, userSubscription, leaderboardData] = await Promise.all([
@@ -35,6 +38,8 @@ const LeaderBoardPage = async () => {
           points={userProgress.points}
           hasActiveSubscription={isPro}
         />
+        {!isPro && <Promo />}
+        <Quests points={userProgress.points} />
       </StickyWrapper>
       <FeedWrapper>
         <div className="flex w-full flex-col items-center">
@@ -44,6 +49,7 @@ const LeaderBoardPage = async () => {
             src="/leaderboard.svg"
             alt="Leaderboard"
           />
+          {!isPro && <Promo />}
           <h1 className="my-6 text-center text-2xl font-bold text-neutral-800">
             Leaderboard
           </h1>
